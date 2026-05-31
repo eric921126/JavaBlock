@@ -19,6 +19,7 @@ public class VariableBlock extends StackPane {
     private double dragStartX;
     private double dragStartY;
     private java.util.List<javafx.scene.Node> tailBlocks = new java.util.ArrayList<>();
+    private final String blockType = "variable";
 
     public VariableBlock() {
         // 1. 背景加長一點，因為下拉選單比較佔空間 (從 200 改成 280)
@@ -174,4 +175,27 @@ public class VariableBlock extends StackPane {
 
         return type + " " + name + " = " + value + ";";
     }
+
+    public String getBlockType() {
+        return this.blockType;
+    }
+    public String getSelectedType() { return typeSelector.getValue(); }
+    public String getVarName() { return nameField.getText(); }
+    public String getVarValue() { return valueField.getText(); }
+
+    // === 在 VariableBlock.java 最下方補上以下三個 Setter ===
+    public void setVariableData(String type, String name, String value) {
+        if (this.typeSelector != null) {
+            this.typeSelector.setValue(type);
+        }
+        if (this.nameField != null) {
+            this.nameField.setText(name);
+        }
+        if (this.valueField != null) {
+            this.valueField.setText(value);
+            // 順便觸發一下你們原本寫好的防呆防護網檢查顏色
+            validateInput();
+        }
+    }
+
 }

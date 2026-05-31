@@ -13,8 +13,10 @@ public class DraggableBlock extends StackPane {
     private double dragStartX;
     private double dragStartY;
     private java.util.List<javafx.scene.Node> tailBlocks = new java.util.ArrayList<>();
+    private String blockType;
 
     public DraggableBlock(String label, Color color, String code) {
+        this.blockType = label; // 👈 加這行
         this.javaCode = code;
 
         // 1. 繪製積木外觀
@@ -100,5 +102,9 @@ public class DraggableBlock extends StackPane {
 
     public String getJavaCode() {
         return javaCode;
+    }
+
+    public String getBlockType() {
+        return this.blockType;
     }
 }

@@ -276,4 +276,9 @@ public class ControlBlock extends VBox {
         sb.append("}\n");
         return sb.toString();
     }
+
+    public String getBlockType() {
+        return this.blockType;
+    }
+
 }
