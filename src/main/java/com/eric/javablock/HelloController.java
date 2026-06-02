@@ -44,6 +44,7 @@ public class HelloController {
     @FXML private VBox paletteBox; // 左邊的工具箱
     @FXML private Pane workspace; // 中間的畫布
     @FXML private TextArea codePreview; // 右邊的程式碼預覽
+    @FXML private TextArea outputArea;
 
     // 【新增】用來記錄當前專案的檔案指引（如果為 null 代表是全新未存檔的專案）
     private File currentProjectFile = null;
@@ -696,6 +697,15 @@ public class HelloController {
                 }
             }
         });
+    }
+
+    @FXML
+    private void onRunCode() {
+        String userCode = codePreview.getText();
+        new Thread(() -> {
+            String output = CodeRunner.run(userCode);
+            javafx.application.Platform.runLater(() -> outputArea.setText(output));
+        }).start();
     }
 
 }

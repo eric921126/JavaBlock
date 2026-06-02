@@ -35,6 +35,13 @@
       <HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
    </bottom>
    <right>
-      <TextArea fx:id="codePreview" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+      <VBox prefWidth="200.0" spacing="5.0" BorderPane.alignment="CENTER">
+         <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </padding>
+         <TextArea fx:id="codePreview" prefHeight="500.0" prefWidth="200.0" />
+         <Button text="▶ 執行" onAction="#onRunCode" maxWidth="Infinity" />
+         <TextArea fx:id="outputArea" prefHeight="200.0" prefWidth="200.0" editable="false" promptText="執行結果會顯示在這裡..." />
+      </VBox>
    </right>
 </BorderPane>
