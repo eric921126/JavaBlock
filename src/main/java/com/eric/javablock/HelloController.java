@@ -56,7 +56,7 @@ public class HelloController {
     @FXML
     public void initialize() {
         // 1. 輸出/輸入類 (藍色)
-        createPaletteItem("System.out.println", Color.DODGERBLUE, "System.out.println(\"Hello World\");");
+        createPrintPaletteItem();
 
         // 2. 變數宣告類 (橘色)
         createVariablePaletteItem();
@@ -71,6 +71,10 @@ public class HelloController {
         // 【新增】物件導向類 (紫色)
         createControlPaletteItem("class");
         createControlPaletteItem("method");
+        createNewObjectPaletteItem();
+        createMethodCallPaletteItem();
+        createVariableUpdatePaletteItem();
+        createReturnPaletteItem();
         // 【新增】初始化垃圾桶區域並固定在右下角
         createTrashZoneUI();
 
@@ -88,6 +92,56 @@ public class HelloController {
                     }
                 });
             }
+        });
+    }
+
+    private void createVariableUpdatePaletteItem() {
+        StackPane item = createPaletteUI("Update Var", Color.CORAL);
+        item.setOnMousePressed(event -> {
+            VariableUpdateBlock realBlock = new VariableUpdateBlock();
+            realBlock.setOnKeyReleased(k -> updateCodeArea());
+            handlePaletteDrag(item, realBlock, 280);
+        });
+    }
+
+    private void createReturnPaletteItem() {
+        StackPane item = createPaletteUI("return", Color.DEEPPINK);
+        item.setOnMousePressed(event -> {
+            ReturnBlock realBlock = new ReturnBlock();
+            realBlock.setOnKeyReleased(k -> updateCodeArea());
+            handlePaletteDrag(item, realBlock, 200);
+        });
+    }
+
+    private void createMethodCallPaletteItem() {
+        StackPane item = createPaletteUI("object.method()", Color.ORANGERED);
+        item.setOnMousePressed(event -> {
+            MethodCallBlock realBlock = new MethodCallBlock();
+            realBlock.setOnKeyReleased(k -> updateCodeArea());
+            // 寬度設定為 320px
+            handlePaletteDrag(item, realBlock, 320);
+        });
+    }
+
+    private void createNewObjectPaletteItem() {
+        StackPane item = createPaletteUI("new Object()", Color.TOMATO);
+        item.setOnMousePressed(event -> {
+            NewObjectBlock realBlock = new NewObjectBlock();
+            // 綁定鍵盤事件，打字時即時更新右側程式碼
+            realBlock.setOnKeyReleased(k -> updateCodeArea());
+            // 寬度設定為 360，對齊積木的真實寬度
+            handlePaletteDrag(item, realBlock, 360);
+        });
+    }
+
+    // --- 產生可輸入的 Print 積木 ---
+    private void createPrintPaletteItem() {
+        StackPane item = createPaletteUI("Print block", Color.DODGERBLUE);
+        item.setOnMousePressed(event -> {
+            PrintBlock realBlock = new PrintBlock();
+            // 讓打字的時候，右邊的預覽框也能即時更新！
+            realBlock.setOnKeyReleased(k -> updateCodeArea());
+            handlePaletteDrag(item, realBlock, 280);
         });
     }
 
@@ -116,7 +170,12 @@ public class HelloController {
                 workspace.getChildren().removeIf(node ->
                         node instanceof DraggableBlock ||
                                 node instanceof VariableBlock ||
-                                node instanceof ControlBlock
+                                node instanceof ControlBlock ||
+                                node instanceof PrintBlock ||
+                                node instanceof NewObjectBlock ||
+                                node instanceof MethodCallBlock ||
+                                node instanceof VariableUpdateBlock ||
+                                node instanceof ReturnBlock
                 );
                 // 同步清空右側程式碼
                 updateCodeArea();
@@ -256,6 +315,7 @@ public class HelloController {
         });
 
         setupBlockEvents(realBlock);
+        setupContextMenu(realBlock);
     }
 
     // --- 為真積木綁定事件 ---
@@ -295,6 +355,11 @@ public class HelloController {
         for (javafx.scene.Node target : workspace.getChildren()) {
             if (target instanceof ControlBlock && target != draggedBlock) {
                 ControlBlock cb = (ControlBlock) target;
+
+                if (!isCompatible(cb, draggedBlock)) {
+                    continue;
+                }
+
                 Point2D center = draggedBlock.localToScene(draggedBlock.getBoundsInLocal().getWidth() / 2, 10);
                 Point2D localInCb = cb.innerContainer.sceneToLocal(center);
 
@@ -382,22 +447,66 @@ public class HelloController {
     }
 
     // --- 更新程式碼 ---
+    // --- 更新與印出程式碼區域 (自動封裝 Main 結構版) ---
     private void updateCodeArea() {
         List<javafx.scene.Node> blocks = new ArrayList<>();
         for (var node : workspace.getChildren()) {
-            if (node instanceof DraggableBlock || node instanceof VariableBlock || node instanceof ControlBlock) {
+            if (node instanceof DraggableBlock || node instanceof VariableBlock ||
+                    node instanceof ControlBlock || node instanceof PrintBlock ||
+                    node instanceof NewObjectBlock || node instanceof MethodCallBlock ||
+                    node instanceof VariableUpdateBlock || node instanceof ReturnBlock) {
                 blocks.add(node);
             }
         }
+        // 依照 Y 座標由上往下排序
         blocks.sort((a, b) -> Double.compare(a.getLayoutY(), b.getLayoutY()));
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder mainLogic = new StringBuilder();
+        StringBuilder classLogic = new StringBuilder();
+
+        // 1. 掃描所有積木並分類
         for (var block : blocks) {
-            if (block instanceof DraggableBlock) sb.append(((DraggableBlock) block).getJavaCode()).append("\n");
-            else if (block instanceof VariableBlock) sb.append(((VariableBlock) block).getJavaCode()).append("\n");
-            else if (block instanceof ControlBlock) sb.append(((ControlBlock) block).getJavaCode()).append("\n");
+            String code = "";
+            if (block instanceof DraggableBlock) code = ((DraggableBlock) block).getJavaCode();
+            else if (block instanceof VariableBlock) code = ((VariableBlock) block).getJavaCode();
+            else if (block instanceof PrintBlock) code = ((PrintBlock) block).getJavaCode();
+            else if (block instanceof NewObjectBlock) code = ((NewObjectBlock) block).getJavaCode();
+            else if (block instanceof MethodCallBlock) code = ((MethodCallBlock) block).getJavaCode();
+            else if (block instanceof ControlBlock) code = ((ControlBlock) block).getJavaCode();
+            else if (block instanceof VariableUpdateBlock) code = ((VariableUpdateBlock) block).getJavaCode();
+            else if (block instanceof ReturnBlock) code = ((ReturnBlock) block).getJavaCode();
+
+            if (!code.isEmpty()) {
+                // 如果這塊積木產出的程式碼是 public class 開頭，就歸類到 classLogic
+                if (code.startsWith("public class")) {
+                    classLogic.append(code).append("\n");
+                } else {
+                    // 其他的一律視為一般邏輯，歸類到 mainLogic
+                    mainLogic.append(code).append("\n");
+                }
+            }
         }
-        codePreview.setText(sb.toString());
+
+        // 2. 組裝最終的標準 Java 檔案結構
+        StringBuilder finalCode = new StringBuilder();
+
+        // 建立主程式進入點
+        finalCode.append("public class Main {\n");
+        finalCode.append("    public static void main(String[] args) {\n");
+
+        // 把散落的邏輯積木塞進 main 裡面，並自動加上 8 個空格的縮排
+        if (mainLogic.length() > 0) {
+            finalCode.append(mainLogic.toString().replaceAll("(?m)^", "        "));
+        }
+
+        finalCode.append("    }\n");
+        finalCode.append("}\n\n");
+
+        // 把自訂的 class 放在主程式下方
+        finalCode.append(classLogic.toString());
+
+        // 輸出到右側預覽窗
+        codePreview.setText(finalCode.toString());
     }
 
     // 輔助方法：將畫布積木物件轉為 JSON 資料
@@ -706,6 +815,75 @@ public class HelloController {
             String output = CodeRunner.run(userCode);
             javafx.application.Platform.runLater(() -> outputArea.setText(output));
         }).start();
+    }
+
+    // --- 【新增】積木相容性防呆機制 (Type Checking) ---
+    // --- 【升級版】積木相容性防呆機制 (Type Checking) ---
+    private boolean isCompatible(ControlBlock parent, javafx.scene.Node child) {
+        String parentType = parent.getBlockType();
+
+        // 規則 1：class 絕對不能被任何人吃掉！(它永遠在最外層)
+        if (child instanceof ControlBlock && ((ControlBlock) child).getBlockType().equals("class")) {
+            return false;
+        }
+
+        // 規則 2：針對 class 肚子的嚴格安檢
+        if (parentType.equals("class")) {
+            // 允許 1: 塞入 method (方法)
+            if (child instanceof ControlBlock && ((ControlBlock) child).getBlockType().equals("method")) {
+                return true;
+            }
+            // 允許 2: 塞入變數或物件宣告 (做為類別的屬性/全域變數)
+            if (child instanceof VariableBlock || child instanceof NewObjectBlock) {
+                return true;
+            }
+
+            // 拒絕: print, if, for, while, 以及方法呼叫 (object.method) 都不能直接放 class 裡
+            return false;
+        }
+
+        // 規則 3：method 只能待在 class 裡面！(不能塞進迴圈或其他地方)
+        if (child instanceof ControlBlock && ((ControlBlock) child).getBlockType().equals("method")) {
+            return parentType.equals("class");
+        }
+
+        // 其他正常組合 (例如把 if 塞進 method，把 print 塞進 for) 全部放行！
+        return true;
+    }
+
+    // --- 【新增】為積木綁定滑鼠右鍵選單 (Context Menu) ---
+    private void setupContextMenu(javafx.scene.Node block) {
+        javafx.scene.control.ContextMenu contextMenu = new javafx.scene.control.ContextMenu();
+
+        // 建立「刪除」選項
+        javafx.scene.control.MenuItem deleteItem = new javafx.scene.control.MenuItem("🗑️ 刪除此積木");
+        deleteItem.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+
+        deleteItem.setOnAction(e -> {
+            // 找出它下面有沒有黏著整串尾巴，一併連根拔起
+            List<javafx.scene.Node> tail = getWorkspaceTail(block);
+            removeBlockFromParent(block);
+            for (javafx.scene.Node t : tail) {
+                removeBlockFromParent(t);
+            }
+            // 刪除後自動更新右側程式碼
+            updateCodeArea();
+        });
+
+        contextMenu.getItems().add(deleteItem);
+
+        // 監聽滑鼠右鍵點擊事件
+        block.setOnContextMenuRequested(event -> {
+            contextMenu.show(block, event.getScreenX(), event.getScreenY());
+            event.consume(); // 防止事件繼續往下傳遞
+        });
+
+        // 當滑鼠點擊畫布其他地方時，自動隱藏選單
+        workspace.setOnMousePressed(event -> {
+            if (contextMenu.isShowing()) {
+                contextMenu.hide();
+            }
+        });
     }
 
 }

@@ -267,7 +267,11 @@ public class ControlBlock extends VBox {
             if (node instanceof DraggableBlock) childCode = ((DraggableBlock) node).getJavaCode();
             else if (node instanceof VariableBlock) childCode = ((VariableBlock) node).getJavaCode();
             else if (node instanceof ControlBlock) childCode = ((ControlBlock) node).getJavaCode();
-
+            else if (node instanceof PrintBlock) childCode = ((PrintBlock) node).getJavaCode();
+            else if (node instanceof NewObjectBlock) childCode = ((NewObjectBlock) node).getJavaCode();
+            else if (node instanceof MethodCallBlock) childCode = ((MethodCallBlock) node).getJavaCode();
+            else if (node instanceof VariableUpdateBlock) childCode = ((VariableUpdateBlock) node).getJavaCode();
+            else if (node instanceof ReturnBlock) childCode = ((ReturnBlock) node).getJavaCode();
             if (!childCode.isEmpty()) {
                 sb.append(childCode.replaceAll("(?m)^", "    ")).append("\n");
             }
