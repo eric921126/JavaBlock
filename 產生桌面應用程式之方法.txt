@@ -1,0 +1,37 @@
+第一步：生成可执行 JAR 文件(要保證jar和編譯器版本一致)：
+
+在 IDEA 中点击 File → Project Structure → Artifacts。
+
+点击 + → JAR → From modules with dependencies。
+
+Main Class 选择 Launcher，选择 extract to the target JAR，点击 OK。
+
+點擊Apply和OK後，在外面的頂端選單中点击 Build → Build Artifacts → Build。你会在 out/artifacts/ 下得到一个 .jar 文件
+
+第二步：打包成可安装的 EXE（核心步骤）
+1.安装辅助工具 WiX Toolset：
+jpackage 生成 .exe/.msi 安装程序时需要用到它。请前往 wixtoolset.org 下载并安装。
+官方下载地址：https://github.com/wixtoolset/wix3/releases/download/wix311rtm/wix311.exe
+
+2.打开命令行（CMD）：
+务必使用“管理员身份”运行，否则制作安装程序时可能会因权限不足而失败。
+
+3.执行打包命令：
+在命令行中，切换到你存放打包文件的目标目录，然后执行以下命令。记得把其中包含中文的路径替换成你自己的实际路径。
+
+--------------------------
+jpackage ^
+  --type exe ^
+  --name "JavaBlock" ^
+  --input "D:\你的项目路径\out\artifacts\JavaBlock_jar" ^
+  --main-jar "JavaBlock.jar" ^
+  --main-class "com.eric.javablock.Launcher" ^
+  --runtime-image "C:\Program Files\你的Java編譯器路径" ^ 
+  --icon "D:\你的图标路径\JavaBlock.ico" ^
+  --dest "C:\Users\你的名稱\Desktop" ^ 
+  --win-menu ^
+  --win-shortcut
+--------------------------
+
+最後：
+执行成功后，你会在桌面中，得到一个名为 JavaBlock-1.0.exe 的安装程序。用户双击它，按照指引完成安装，就可以从桌面快捷方式打开你的 JavaBlock 了，整个过程完全感知不到 Java 的存在
