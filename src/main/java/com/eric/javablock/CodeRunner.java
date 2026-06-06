@@ -10,22 +10,26 @@ public class CodeRunner {
 
     //接收積木拼出來的程式碼字串，編譯並執行後回傳結果
     public static String run(String userCode) {
-        //包上完整class
-        String fullCode = """
-                public class Generated {
-                    public static void main(String[] args) {
-                %s
-                    }
-                }
-                """.formatted(userCode);
+        // 找出有 main 方法的 class 名稱
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("public class (\\w+)(?=[^}]*public static void main)")
+                .matcher(userCode);
 
+        String mainClassName = matcher.find() ? matcher.group(1) : null;
+        if (mainClassName == null) return "找不到含有 main 方法的 class";
+
+        // 把其他 public class 拿掉 public，避免一個檔案有多個 public class
+        String modifiedCode = userCode.replaceAll(
+                "public class (?!" + mainClassName + ")",
+                "class "
+        );
 
         try {
 
-            //存檔寫入程式
+            //存檔寫入程式，檔名跟 main class 名稱一致
             Path dir = Files.createTempDirectory("javablock_");
-            Path javaFile = dir.resolve("Generated.java");
-            Files.writeString(javaFile, fullCode);
+            Path javaFile = dir.resolve(mainClassName + ".java");
+            Files.writeString(javaFile, modifiedCode);
 
             //呼叫編譯器
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -37,7 +41,7 @@ public class CodeRunner {
             if (result != 0) return "編譯錯誤：\n" + err.toString();
 
             //執行檔案
-            ProcessBuilder pb = new ProcessBuilder("java", "-cp", dir.toString(), "Generated");
+            ProcessBuilder pb = new ProcessBuilder("java", "-cp", dir.toString(), mainClassName);
             pb.redirectErrorStream(true);
             Process process = pb.start();
 
