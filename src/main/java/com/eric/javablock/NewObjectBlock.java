@@ -113,6 +113,15 @@ public class NewObjectBlock extends StackPane {
         });
     }
 
+    public String getClassName1() { return classNameInput1.getText(); }
+    public String getObjectName() { return objectNameInput.getText(); }
+    public String getClassName2() { return classNameInput2.getText(); }
+    public void setNewObjectData(String className1, String objectName, String className2) {
+        if (classNameInput1 != null) classNameInput1.setText(className1);
+        if (objectNameInput != null) objectNameInput.setText(objectName);
+        if (classNameInput2 != null) classNameInput2.setText(className2);
+    }
+
     public String getJavaCode() {
         return classNameInput1.getText() + " " + objectNameInput.getText() + " = new " + classNameInput2.getText() + "();";
     }

@@ -113,7 +113,15 @@ public class PrintBlock extends StackPane {
         });
     }
 
+    public String getPrintContent() {
+        return printInput.getText();
+    }
+    public void setPrintContent(String content) {
+        if (printInput != null) printInput.setText(content);
+    }
+
     public String getJavaCode() {
         return "System.out.println(" + printInput.getText() + ");";
     }
+
 }

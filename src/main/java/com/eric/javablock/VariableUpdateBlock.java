@@ -92,6 +92,13 @@ public class VariableUpdateBlock extends StackPane {
         });
     }
 
+    public String getVarName() { return varNameInput.getText(); }
+    public String getVarValue() { return varValueInput.getText(); }
+    public void setVariableUpdateData(String varName, String varValue) {
+        if (varNameInput != null) varNameInput.setText(varName);
+        if (varValueInput != null) varValueInput.setText(varValue);
+    }
+
     public String getJavaCode() {
         return varNameInput.getText() + " = " + varValueInput.getText() + ";";
     }

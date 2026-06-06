@@ -88,6 +88,11 @@ public class ReturnBlock extends StackPane {
         });
     }
 
+    public String getReturnValue() { return returnInput.getText(); }
+    public void setReturnBlockData(String returnValue) {
+        if (returnInput != null) returnInput.setText(returnValue);
+    }
+
     public String getJavaCode() {
         return "return " + returnInput.getText() + ";";
     }

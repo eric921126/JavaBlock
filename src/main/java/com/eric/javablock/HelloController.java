@@ -544,6 +544,47 @@ public class HelloController {
             }
             builder.add("innerBlocks", innerArrayBuilder.build());
             return builder.build();
+        }// ✅ 新增：PrintBlock
+        else if (node instanceof PrintBlock) {
+            PrintBlock b = (PrintBlock) node;
+            builder.add("classType", "PrintBlock");
+            // 需要取得 printInput 的值，但它是 private，建議在 PrintBlock 中增加 getter
+            // 如果不想動 PrintBlock，暫時用 toString 或其他方式取得
+            builder.add("printContent",b.getPrintContent());
+            return builder.build();
+        }
+        // ✅ 新增：NewObjectBlock
+        else if (node instanceof NewObjectBlock) {
+            NewObjectBlock b = (NewObjectBlock) node;
+            builder.add("classType", "NewObjectBlock");
+            builder.add("className1", b.getClassName1());
+            builder.add("objectName", b.getObjectName());
+            builder.add("className2", b.getClassName2());
+            return builder.build();
+        }
+        // ✅ 新增：MethodCallBlock
+        else if (node instanceof MethodCallBlock) {
+            MethodCallBlock b = (MethodCallBlock) node;
+            builder.add("classType", "MethodCallBlock");
+            builder.add("objectName", b.getObjectName());
+            builder.add("methodName", b.getMethodName());
+            builder.add("methodArgs", b.getMethodArgs());
+            return builder.build();
+        }
+        // ✅ 新增：VariableUpdateBlock
+        else if (node instanceof VariableUpdateBlock) {
+            VariableUpdateBlock b = (VariableUpdateBlock) node;
+            builder.add("classType", "VariableUpdateBlock");
+            builder.add("varName", b.getVarName());
+            builder.add("varValue", b.getVarValue());
+            return builder.build();
+        }
+        // ✅ 新增：ReturnBlock
+        else if (node instanceof ReturnBlock) {
+            ReturnBlock b = (ReturnBlock) node;
+            builder.add("classType", "ReturnBlock");
+            builder.add("returnValue", b.getReturnValue());
+            return builder.build();
         }
         return null;
     }
@@ -601,6 +642,59 @@ public class HelloController {
             // 核心：【重新綁定滑鼠拖曳監聽】讓讀出來的控制積木可以被自由拖動
             b.setOnKeyReleased(k -> updateCodeArea());
             // 【關鍵修復】讀檔時必須幫積木重新綁定事件，否則會卡死無法與其他積木分離！
+            setupBlockEvents(b);
+            return b;
+        }// ✅ 新增：PrintBlock
+        else if ("PrintBlock".equals(classType)) {
+            PrintBlock b = new PrintBlock();
+            b.setLayoutX(x);
+            b.setLayoutY(y);
+            // 需要設定 printInput 的值，建議在 PrintBlock 中加 setPrintContent()
+            b.setPrintContent(obj.getString("printContent"));
+            setupBlockEvents(b);
+            return b;
+        }
+        // ✅ 新增：NewObjectBlock
+        else if ("NewObjectBlock".equals(classType)) {
+            NewObjectBlock b = new NewObjectBlock();
+            b.setLayoutX(x);
+            b.setLayoutY(y);
+            b.setNewObjectData(
+                    obj.getString("className1"),
+                    obj.getString("objectName"),
+                    obj.getString("className2"));
+            setupBlockEvents(b);
+            return b;
+        }
+        // ✅ 新增：MethodCallBlock
+        else if ("MethodCallBlock".equals(classType)) {
+            MethodCallBlock b = new MethodCallBlock();
+            b.setLayoutX(x);
+            b.setLayoutY(y);
+            b.setMethodCallData(
+                    obj.getString("objectName"),
+                    obj.getString("methodName"),
+                    obj.getString("methodArgs"));
+            setupBlockEvents(b);
+            return b;
+        }
+        // ✅ 新增：VariableUpdateBlock
+        else if ("VariableUpdateBlock".equals(classType)) {
+            VariableUpdateBlock b = new VariableUpdateBlock();
+            b.setLayoutX(x);
+            b.setLayoutY(y);
+            b.setVariableUpdateData(
+                    obj.getString("varName"),
+                    obj.getString("varValue"));
+            setupBlockEvents(b);
+            return b;
+        }
+        // ✅ 新增：ReturnBlock
+        else if ("ReturnBlock".equals(classType)) {
+            ReturnBlock b = new ReturnBlock();
+            b.setLayoutX(x);
+            b.setLayoutY(y);
+            b.setReturnBlockData(obj.getString("returnValue"));
             setupBlockEvents(b);
             return b;
         }
@@ -730,7 +824,12 @@ public class HelloController {
                 workspace.getChildren().removeIf(node ->
                         node instanceof DraggableBlock ||
                                 node instanceof ControlBlock ||
-                                node instanceof VariableBlock
+                                node instanceof VariableBlock ||
+                                node instanceof PrintBlock ||          // ✅ 新增
+                                node instanceof NewObjectBlock ||       // ✅ 新增
+                                node instanceof MethodCallBlock ||      // ✅ 新增
+                                node instanceof VariableUpdateBlock ||  // ✅ 新增
+                                node instanceof ReturnBlock             // ✅ 新增
                 );
 
                 // 讀取 JSON 陣列並還原積木

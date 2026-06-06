@@ -121,6 +121,15 @@ public class MethodCallBlock extends StackPane {
         });
     }
 
+    public String getObjectName() { return objectNameInput.getText(); }
+    public String getMethodName() { return methodNameInput.getText(); }
+    public String getMethodArgs() { return methodArgsInput.getText(); }
+    public void setMethodCallData(String objectName, String methodName, String methodArgs) {
+        if (objectNameInput != null) objectNameInput.setText(objectName);
+        if (methodNameInput != null) methodNameInput.setText(methodName);
+        if (methodArgsInput != null) methodArgsInput.setText(methodArgs);
+    }
+
     public String getJavaCode() {
         return objectNameInput.getText() + "." + methodNameInput.getText() + "(" + methodArgsInput.getText() + ");";
     }
