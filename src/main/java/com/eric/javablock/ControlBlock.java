@@ -26,6 +26,10 @@ public class ControlBlock extends VBox {
     // 【新增】Method 方法專用輸入框
     private TextField methodNameInput;
     private TextField methodParamsInput;
+    // 【新增】用來選擇回傳型別的下拉選單
+    private javafx.scene.control.ComboBox<String> returnTypeBox;
+    private javafx.scene.control.ComboBox<String> accessBox;
+    private TextField conditionInput;
 
     private double dragStartX;
     private double dragStartY;
@@ -51,7 +55,7 @@ public class ControlBlock extends VBox {
             borderHex = "#FFD700";
         }
 
-        double blockWidth = type.equals("for") ? 350 : (type.equals("method") ? 320 : 200);
+        double blockWidth = type.equals("for") ? 350 : (type.equals("method") ? 460 : (type.equals("class") ? 300 : 200));
 
         StackPane header;
         if (type.equals("for")) {
@@ -59,10 +63,9 @@ public class ControlBlock extends VBox {
         } else if (type.equals("class")) {
             header = createClassHeader(blockWidth, blockColor);
         } else if (type.equals("method")) {
-            // 【新增】呼叫帶有輸入框的 method 頭部
             header = createMethodHeader(blockWidth, blockColor);
-        } else if (type.equals("if")) {
-            header = createBar("if ( condition ) {", blockWidth, blockColor);
+        } else if (type.equals("if") || type.equals("while")) {
+            header = createConditionHeader(type, blockWidth, blockColor);
         } else {
             header = createBar(type + " ( true ) {", blockWidth, blockColor);
         }
@@ -165,6 +168,32 @@ public class ControlBlock extends VBox {
         return bar;
     }
 
+    // --- 【新增】生成 if 與 while 帶有條件輸入框的頭部 ---
+    private StackPane createConditionHeader(String typeName, double width, Color color) {
+        StackPane bar = new StackPane();
+        Rectangle rect = new Rectangle(width, 35, color);
+        rect.setArcWidth(10); rect.setArcHeight(10);
+        HBox content = new HBox(5); content.setAlignment(Pos.CENTER);
+
+        Text t1 = new Text(typeName + " ( ");
+        t1.setFill(Color.WHITE);
+        t1.setFont(Font.font("System", 14));
+
+        // 條件輸入框
+        conditionInput = new TextField("");
+        // 根據不同種類給予不同的浮水印提示，讓畫面更豐富
+        conditionInput.setPromptText(typeName.equals("if") ? "hp > 0" : "i < 10");
+        conditionInput.setPrefWidth(90);
+
+        Text t2 = new Text(" ) {");
+        t2.setFill(Color.WHITE);
+        t2.setFont(Font.font("System", 14));
+
+        content.getChildren().addAll(t1, conditionInput, t2);
+        bar.getChildren().addAll(rect, content);
+        return bar;
+    }
+
     private StackPane createForHeader(double width, Color color) {
         StackPane bar = new StackPane();
         Rectangle rect = new Rectangle(width, 35, color);
@@ -193,7 +222,11 @@ public class ControlBlock extends VBox {
         rect.setArcWidth(10); rect.setArcHeight(10);
 
         HBox content = new HBox(5);
-        content.setAlignment(Pos.CENTER);
+
+        accessBox = new javafx.scene.control.ComboBox<>();
+        accessBox.getItems().addAll("public", "private", "protected", ""); // 空字串代表不寫 (default)
+        accessBox.setValue("public");
+        accessBox.setPrefWidth(85);
 
         Text t1 = new Text("public class ");
         t1.setFill(Color.WHITE);
@@ -206,7 +239,7 @@ public class ControlBlock extends VBox {
         t2.setFill(Color.WHITE);
         t2.setFont(Font.font("System", 14));
 
-        content.getChildren().addAll(t1, classNameInput, t2);
+        content.getChildren().addAll(accessBox, t1, classNameInput, t2);
         bar.getChildren().addAll(rect, content);
         return bar;
     }
@@ -218,9 +251,16 @@ public class ControlBlock extends VBox {
         rect.setArcWidth(10); rect.setArcHeight(10);
         HBox content = new HBox(5); content.setAlignment(Pos.CENTER);
 
-        Text t1 = new Text("public void ");
-        t1.setFill(Color.WHITE);
-        t1.setFont(Font.font("System", 14));
+        accessBox = new javafx.scene.control.ComboBox<>();
+        accessBox.getItems().addAll("public", "private", "protected", "");
+        accessBox.setValue("public");
+        accessBox.setPrefWidth(85);
+        // 2. 【關鍵新增】回傳型別下拉選單
+        returnTypeBox = new javafx.scene.control.ComboBox<>();
+        returnTypeBox.getItems().addAll("void", "int", "double", "String", "boolean");
+        returnTypeBox.setValue("void"); // 預設值
+        returnTypeBox.setEditable(true); // 讓使用者可以自己輸入 (例如輸入 monster)
+        returnTypeBox.setPrefWidth(85);
 
         methodNameInput = new TextField("myMethod");
         methodNameInput.setPrefWidth(80);
@@ -229,7 +269,7 @@ public class ControlBlock extends VBox {
         t2.setFill(Color.WHITE);
         t2.setFont(Font.font("System", 14));
 
-        // 【新增】參數輸入框
+        // 參數輸入框
         methodParamsInput = new TextField("");
         methodParamsInput.setPromptText("int x"); // 水印提示字
         methodParamsInput.setPrefWidth(80);
@@ -238,7 +278,8 @@ public class ControlBlock extends VBox {
         t3.setFill(Color.WHITE);
         t3.setFont(Font.font("System", 14));
 
-        content.getChildren().addAll(t1, methodNameInput, t2, methodParamsInput, t3);
+        // 3. 把 tPublic 和 returnTypeBox 依序加進畫面
+        content.getChildren().addAll(accessBox, returnTypeBox, methodNameInput, t2, methodParamsInput, t3);
         bar.getChildren().addAll(rect, content);
         return bar;
     }
@@ -247,16 +288,24 @@ public class ControlBlock extends VBox {
         StringBuilder sb = new StringBuilder();
 
         if (blockType.equals("class")) {
-            sb.append("public class ").append(classNameInput.getText()).append(" {\n");
+            // 動態讀取 public/private 下拉選單 (若為空字串則不加空白)
+            String access = accessBox.getValue().isEmpty() ? "" : accessBox.getValue() + " ";
+            sb.append(access).append("class ").append(classNameInput.getText()).append(" {\n");
+
         } else if (blockType.equals("method")) {
-            sb.append("public void ").append(methodNameInput.getText())
-                    .append("(").append(methodParamsInput.getText()).append(") {\n");
+            // 動態讀取 public/private 與回傳型別
+            String access = accessBox.getValue().isEmpty() ? "" : accessBox.getValue() + " ";
+            sb.append(access).append(returnTypeBox.getValue()).append(" ")
+                    .append(methodNameInput.getText()).append("(").append(methodParamsInput.getText()).append(") {\n");
+
         } else if (blockType.equals("for")) {
             sb.append("for (").append(forInit.getText()).append("; ")
                     .append(forCondition.getText()).append("; ")
                     .append(forStep.getText()).append(") {\n");
-        } else if (blockType.equals("if")) {
-            sb.append("if (true) {\n");
+
+        } else if (blockType.equals("if") || blockType.equals("while")) {
+            String condition = conditionInput.getText().isEmpty() ? "true" : conditionInput.getText();
+            sb.append(blockType).append(" (").append(condition).append(") {\n");
         } else {
             sb.append(blockType).append(" (true) {\n");
         }

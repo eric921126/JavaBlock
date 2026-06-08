@@ -119,7 +119,7 @@ public class HelloController {
             MethodCallBlock realBlock = new MethodCallBlock();
             realBlock.setOnKeyReleased(k -> updateCodeArea());
             // 寬度設定為 320px
-            handlePaletteDrag(item, realBlock, 320);
+            handlePaletteDrag(item, realBlock, 460);
         });
     }
 
