@@ -3,6 +3,7 @@ package com.eric.javablock;
 import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -43,6 +44,7 @@ public class HelloController {
 
     @FXML private VBox paletteBox; // 左邊的工具箱
     @FXML private Pane workspace; // 中間的畫布
+    @FXML private AnchorPane fixedOverlay; // ⭐【新增】承載固定垃圾桶的懸浮層
     @FXML private TextArea codePreview; // 右邊的程式碼預覽
     @FXML private TextArea outputArea;
 
@@ -51,7 +53,7 @@ public class HelloController {
     private File defaultDirectory = new File(System.getProperty("user.home"), "Desktop");
 
     // 【新增】垃圾桶區域物件
-    private StackPane trashZone;
+    public StackPane trashZone;
 
     @FXML
     public void initialize() {
@@ -93,6 +95,7 @@ public class HelloController {
                 });
             }
         });
+
     }
 
     private void createVariableUpdatePaletteItem() {
@@ -159,14 +162,13 @@ public class HelloController {
 
         trashZone.getChildren().addAll(rect, text);
 
-        // 【關鍵修復】刪除原本的 .bind()，改用 AnchorPane 專屬的「錨點定位」
-        // 這代表：把垃圾桶釘在距離底部 20px、距離右邊 20px 的位置
+        // 👍 保留你原本優雅的 AnchorPane 釘選邏輯
+        // 因為現在是釘在 fixedOverlay 上，它會死死釘在螢幕可見範圍的右下角！
         javafx.scene.layout.AnchorPane.setBottomAnchor(trashZone, 20.0);
         javafx.scene.layout.AnchorPane.setRightAnchor(trashZone, 20.0);
 
         trashZone.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2) {
-                // 將畫布上所有的「積木」拔除，但保留垃圾桶本身不受影響
                 workspace.getChildren().removeIf(node ->
                         node instanceof DraggableBlock ||
                                 node instanceof VariableBlock ||
@@ -177,12 +179,12 @@ public class HelloController {
                                 node instanceof VariableUpdateBlock ||
                                 node instanceof ReturnBlock
                 );
-                // 同步清空右側程式碼
                 updateCodeArea();
             }
         });
 
-        workspace.getChildren().add(trashZone);
+        // 🔴【核心修正】不要加到會捲動的 workspace，而是加到永遠固定不動的 fixedOverlay
+        fixedOverlay.getChildren().add(trashZone);
     }
 
     // --- 核心：檢查積木是否被丟進垃圾桶 ---
