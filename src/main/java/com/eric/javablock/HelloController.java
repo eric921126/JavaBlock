@@ -534,9 +534,29 @@ public class HelloController {
         else if (node instanceof ControlBlock) {
             ControlBlock b = (ControlBlock) node;
             builder.add("classType", "ControlBlock");
-            builder.add("blockType", b.getBlockType()); // 會得到 "if", "for", "while"
+            builder.add("blockType", b.getBlockType());
 
-            // 遞迴打包內部嵌套的子積木
+            switch (b.getBlockType()) {
+                case "class":
+                    builder.add("access", b.getAccessModifier());
+                    builder.add("className", b.getClassName());
+                    break;
+                case "method":
+                    builder.add("access", b.getAccessModifier());
+                    builder.add("returnType", b.getReturnType());
+                    builder.add("methodName", b.getMethodName());
+                    builder.add("methodParams", b.getMethodParams());
+                    break;
+                case "for":
+                    builder.add("forInit", b.getForInit());
+                    builder.add("forCondition", b.getForCondition());
+                    builder.add("forStep", b.getForStep());
+                    break;
+                default:
+                    builder.add("condition", b.getCondition());
+                    break;
+            }
+
             JsonArrayBuilder innerArrayBuilder = Json.createArrayBuilder();
             for (var child : b.innerContainer.getChildren()) {
                 JsonObject childJson = convertNodeToJson(child);
@@ -627,6 +647,27 @@ public class HelloController {
             ControlBlock b = new ControlBlock(blockType);
             b.setLayoutX(x);
             b.setLayoutY(y);
+
+            switch (blockType) {
+                case "class":
+                    b.setAccessModifier(obj.getString("access", "public"));
+                    b.setClassName(obj.getString("className", "MyClass"));
+                    break;
+                case "method":
+                    b.setAccessModifier(obj.getString("access", "public"));
+                    b.setReturnType(obj.getString("returnType", "void"));
+                    b.setMethodName(obj.getString("methodName", "myMethod"));
+                    b.setMethodParams(obj.getString("methodParams", ""));
+                    break;
+                case "for":
+                    b.setForInit(obj.getString("forInit", "int i = 0"));
+                    b.setForCondition(obj.getString("forCondition", "i < 5"));
+                    b.setForStep(obj.getString("forStep", "i++"));
+                    break;
+                default:
+                    b.setCondition(obj.getString("condition", ""));
+                    break;
+            }
 
             // 如果當初內部有塞其他小積木，遞迴還原出來並加進去容器裡
             if (obj.containsKey("innerBlocks")) {

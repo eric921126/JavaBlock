@@ -334,4 +334,26 @@ public class ControlBlock extends VBox {
         return this.blockType;
     }
 
+    // --- 存讀檔用 getter ---
+    public String getClassName()      { return classNameInput != null ? classNameInput.getText() : ""; }
+    public String getAccessModifier() { return accessBox != null ? accessBox.getValue() : "public"; }
+    public String getReturnType()     { return returnTypeBox != null ? returnTypeBox.getValue() : "void"; }
+    public String getMethodName()     { return methodNameInput != null ? methodNameInput.getText() : ""; }
+    public String getMethodParams()   { return methodParamsInput != null ? methodParamsInput.getText() : ""; }
+    public String getCondition()      { return conditionInput != null ? conditionInput.getText() : ""; }
+    public String getForInit()        { return forInit != null ? forInit.getText() : ""; }
+    public String getForCondition()   { return forCondition != null ? forCondition.getText() : ""; }
+    public String getForStep()        { return forStep != null ? forStep.getText() : ""; }
+
+    // --- 存讀檔用 setter ---
+    public void setClassName(String v)      { if (classNameInput != null) classNameInput.setText(v); }
+    public void setAccessModifier(String v) { if (accessBox != null) accessBox.setValue(v); }
+    public void setReturnType(String v)     { if (returnTypeBox != null) returnTypeBox.setValue(v); }
+    public void setMethodName(String v)     { if (methodNameInput != null) methodNameInput.setText(v); }
+    public void setMethodParams(String v)   { if (methodParamsInput != null) methodParamsInput.setText(v); }
+    public void setCondition(String v)      { if (conditionInput != null) conditionInput.setText(v); }
+    public void setForInit(String v)        { if (forInit != null) forInit.setText(v); }
+    public void setForCondition(String v)   { if (forCondition != null) forCondition.setText(v); }
+    public void setForStep(String v)        { if (forStep != null) forStep.setText(v); }
+
 }
